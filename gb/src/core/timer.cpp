@@ -19,8 +19,6 @@ void Timer::tick(int cycles) {
             }
         }
     }
-
 }
 
-
-}  // namespace gb
+} // namespace gb

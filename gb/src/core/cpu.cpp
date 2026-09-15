@@ -9,41 +9,66 @@ u8 Cpu::fetch8() {
 }
 
 u16 Cpu::fetch16() {
-    u8 low  = fetch8();
+    u8 low = fetch8();
     u8 high = fetch8();
     return static_cast<u16>((static_cast<u16>(high) << 8) | low);
 }
 
 u8 Cpu::readReg8(u8 index) const {
     switch (index) {
-        case 0: return bc.hi;
-        case 1: return bc.lo;
-        case 2: return de.hi;
-        case 3: return de.lo;
-        case 4: return hl.hi;
-        case 5: return hl.lo;
-        case 6: return bus.read8(hl.get());  // memory through HL
-        case 7: return a;
-        default: return 0xFF; // unreachable — index is always 3 bits
+        case 0:
+            return bc.hi;
+        case 1:
+            return bc.lo;
+        case 2:
+            return de.hi;
+        case 3:
+            return de.lo;
+        case 4:
+            return hl.hi;
+        case 5:
+            return hl.lo;
+        case 6:
+            return bus.read8(hl.get()); // memory through HL
+        case 7:
+            return a;
+        default:
+            return 0xFF; // unreachable — index is always 3 bits
     }
 }
 
 void Cpu::writeReg8(u8 index, u8 value) {
     switch (index) {
-        case 0: bc.hi = value; return;
-        case 1: bc.lo = value; return;
-        case 2: de.hi = value; return;
-        case 3: de.lo = value; return;
-        case 4: hl.hi = value; return;
-        case 5: hl.lo = value; return;
-        case 6: bus.write8(hl.get(), value); return;
-        case 7: a = value; return;
+        case 0:
+            bc.hi = value;
+            return;
+        case 1:
+            bc.lo = value;
+            return;
+        case 2:
+            de.hi = value;
+            return;
+        case 3:
+            de.lo = value;
+            return;
+        case 4:
+            hl.hi = value;
+            return;
+        case 5:
+            hl.lo = value;
+            return;
+        case 6:
+            bus.write8(hl.get(), value);
+            return;
+        case 7:
+            a = value;
+            return;
     }
 }
 
 int Cpu::executeLoadRegToReg(u8 opcode) {
     u8 destIndex = (opcode >> 3) & 0x07;
-    u8 srcIndex  = opcode & 0x07;
+    u8 srcIndex = opcode & 0x07;
 
     u8 value = readReg8(srcIndex);
     writeReg8(destIndex, value);
@@ -73,18 +98,26 @@ int Cpu::incDecReg8(u8 opcode, bool isIncrement) {
     writeReg8(index, result);
     f.zero = (result == 0);
     f.subtract = !isIncrement;
-    f.halfCarry = ((value & 0x0F) == (isIncrement ? 0x0F: 0x00));
-    
+    f.halfCarry = ((value & 0x0F) == (isIncrement ? 0x0F : 0x00));
+
     return (index == 6) ? 12 : 4;
 }
 int Cpu::incDecReg16(u8 opcode) {
     u8 index = (opcode >> 4) & 0x03;
     bool isIncrement = !(opcode & 0x08);
     switch (index) {
-        case 0: bc.set(static_cast<u16>(bc.get() + (isIncrement ? 1 : -1))); break;
-        case 1: de.set(static_cast<u16>(de.get() + (isIncrement ? 1 : -1))); break;
-        case 2: hl.set(static_cast<u16>(hl.get() + (isIncrement ? 1 : -1))); break;
-        case 3: sp = static_cast<u16>(sp + (isIncrement ? 1 : -1)); break;
+        case 0:
+            bc.set(static_cast<u16>(bc.get() + (isIncrement ? 1 : -1)));
+            break;
+        case 1:
+            de.set(static_cast<u16>(de.get() + (isIncrement ? 1 : -1)));
+            break;
+        case 2:
+            hl.set(static_cast<u16>(hl.get() + (isIncrement ? 1 : -1)));
+            break;
+        case 3:
+            sp = static_cast<u16>(sp + (isIncrement ? 1 : -1));
+            break;
     }
     return 8;
 }
@@ -102,14 +135,15 @@ void Cpu::subFromA(u8 value, bool useCarry, bool storeResult) {
     f.halfCarry = halfCarry;
     f.carry = carry;
 
-    if (storeResult) a = finalResult;
+    if (storeResult)
+        a = finalResult;
 }
 
 void Cpu::andWithA(u8 value) {
     a &= value;
     f.zero = (a == 0);
     f.subtract = false;
-    f.halfCarry = true;   // AND always sets H, a fixed hardware behavior — not derived from the math
+    f.halfCarry = true; // AND always sets H, a fixed hardware behavior — not derived from the math
     f.carry = false;
 }
 
@@ -130,19 +164,35 @@ void Cpu::orWithA(u8 value) {
 }
 
 int Cpu::executeArithmetic(u8 opcode) {
-    u8 opIndex  = (opcode >> 3) & 0x07;
+    u8 opIndex = (opcode >> 3) & 0x07;
     u8 srcIndex = opcode & 0x07;
     u8 value = readReg8(srcIndex);
 
     switch (opIndex) {
-        case 0: addToA(value, false); break;              // ADD
-        case 1: addToA(value, true);  break;               // ADC
-        case 2: subFromA(value, false, true);  break;      // SUB
-        case 3: subFromA(value, true,  true);  break;      // SBC
-        case 4: andWithA(value); break;                    // AND
-        case 5: xorWithA(value); break;                    // XOR
-        case 6: orWithA(value);  break;                    // OR
-        case 7: subFromA(value, false, false); break;      // CP — same math as SUB, discard result
+        case 0:
+            addToA(value, false);
+            break; // ADD
+        case 1:
+            addToA(value, true);
+            break; // ADC
+        case 2:
+            subFromA(value, false, true);
+            break; // SUB
+        case 3:
+            subFromA(value, true, true);
+            break; // SBC
+        case 4:
+            andWithA(value);
+            break; // AND
+        case 5:
+            xorWithA(value);
+            break; // XOR
+        case 6:
+            orWithA(value);
+            break; // OR
+        case 7:
+            subFromA(value, false, false);
+            break; // CP — same math as SUB, discard result
     }
 
     return (srcIndex == 6) ? 8 : 4;
@@ -150,11 +200,16 @@ int Cpu::executeArithmetic(u8 opcode) {
 
 bool Cpu::checkCondition(u8 index) const {
     switch (index) {
-        case 0: return !f.zero;   // NZ
-        case 1: return f.zero;    // Z
-        case 2: return !f.carry;  // NC
-        case 3: return f.carry;   // C
-        default: return false;
+        case 0:
+            return !f.zero; // NZ
+        case 1:
+            return f.zero; // Z
+        case 2:
+            return !f.carry; // NC
+        case 3:
+            return f.carry; // C
+        default:
+            return false;
     }
 }
 
@@ -168,12 +223,12 @@ void Cpu::setAF(u16 value) {
 
 void Cpu::push16(u16 value) {
     sp -= 2;
-    bus.write8(sp,     static_cast<u8>(value & 0xFF)); // low byte at the lower address
+    bus.write8(sp, static_cast<u8>(value & 0xFF));   // low byte at the lower address
     bus.write8(sp + 1, static_cast<u8>(value >> 8)); // high byte at the higher address
 }
 
 u16 Cpu::pop16() {
-    u8 low  = bus.read8(sp);
+    u8 low = bus.read8(sp);
     u8 high = bus.read8(sp + 1);
     sp += 2;
     return static_cast<u16>((static_cast<u16>(high) << 8) | low);
@@ -183,21 +238,27 @@ int Cpu::executeLoad16Immediate(u8 opcode) {
     u8 index = (opcode >> 4) & 0x03;
     u16 value = fetch16();
     switch (index) {
-        case 0: bc.set(value); break;
-        case 1: de.set(value); break;
-        case 2: hl.set(value); break;
-        case 3: sp = value; break;
+        case 0:
+            bc.set(value);
+            break;
+        case 1:
+            de.set(value);
+            break;
+        case 2:
+            hl.set(value);
+            break;
+        case 3:
+            sp = value;
+            break;
     }
     return 12;
-
 }
 
 int Cpu::executeLoad8Immediate(u8 opcode) {
     u8 index = (opcode >> 3) & 0x07;
     u8 value = fetch8();
     writeReg8(index, value);
-    return (index == 6) ?  12: 8;
-
+    return (index == 6) ? 12 : 8;
 }
 
 int Cpu::executeIndirectA(u8 opcode) {
@@ -206,32 +267,57 @@ int Cpu::executeIndirectA(u8 opcode) {
     u8 index = field >> 1;
     u16 addr;
     switch (index) {
-        case 0: addr = bc.get(); break;
-        case 1: addr = de.get(); break;
-        default: addr = hl.get(); break;
+        case 0:
+            addr = bc.get();
+            break;
+        case 1:
+            addr = de.get();
+            break;
+        default:
+            addr = hl.get();
+            break;
     }
-    if (isLoad) a = bus.read8(addr);
-    else bus.write8(addr, a);
-    
-    if (index == 2) hl.set(static_cast<u16>(addr + 1));
-    if (index == 3) hl.set(static_cast<u16>(addr - 1));
-    return 8;
+    if (isLoad)
+        a = bus.read8(addr);
+    else
+        bus.write8(addr, a);
 
+    if (index == 2)
+        hl.set(static_cast<u16>(addr + 1));
+    if (index == 3)
+        hl.set(static_cast<u16>(addr - 1));
+    return 8;
 }
 
 int Cpu::executeArithmeticImmediate(u8 opcode) {
-    u8 opIndex  = (opcode >> 3) & 0x07;
+    u8 opIndex = (opcode >> 3) & 0x07;
     u8 value = fetch8();
 
     switch (opIndex) {
-        case 0: addToA(value, false); break;              // ADD
-        case 1: addToA(value, true);  break;               // ADC
-        case 2: subFromA(value, false, true);  break;      // SUB
-        case 3: subFromA(value, true,  true);  break;      // SBC
-        case 4: andWithA(value); break;                    // AND
-        case 5: xorWithA(value); break;                    // XOR
-        case 6: orWithA(value);  break;                    // OR
-        case 7: subFromA(value, false, false); break;      // CP — same math as SUB, discard result
+        case 0:
+            addToA(value, false);
+            break; // ADD
+        case 1:
+            addToA(value, true);
+            break; // ADC
+        case 2:
+            subFromA(value, false, true);
+            break; // SUB
+        case 3:
+            subFromA(value, true, true);
+            break; // SBC
+        case 4:
+            andWithA(value);
+            break; // AND
+        case 5:
+            xorWithA(value);
+            break; // XOR
+        case 6:
+            orWithA(value);
+            break; // OR
+        case 7:
+            subFromA(value, false, false);
+            break; // CP — same math as SUB, discard result
     }
 
     return 8;
@@ -251,11 +337,13 @@ void Cpu::addToHL(u16 value) {
 }
 
 bool Cpu::handleInterrupts() {
-    if (!imeFlag) return false;
+    if (!imeFlag)
+        return false;
     u8 pending = bus.read8(0xFFFF) & bus.read8(0xFF0F) & 0x1F;
-    if (pending == 0) return false;
-    
-    for (u8 bit=0; bit<5; ++bit) {
+    if (pending == 0)
+        return false;
+
+    for (u8 bit = 0; bit < 5; ++bit) {
         if (pending & (1 << bit)) {
             u8 currentIF = bus.read8(0xFF0F);
             bus.write8(0xFF0F, static_cast<u8>(currentIF & ~(1 << bit)));
@@ -322,7 +410,8 @@ u8 Cpu::swap(u8 value) {
     f.zero = (result == 0);
     f.subtract = false;
     f.halfCarry = false;
-    f.carry = false; // SWAP always forces carry false — doesn't fit applyRotateFlags's "outBit" shape
+    f.carry =
+        false; // SWAP always forces carry false — doesn't fit applyRotateFlags's "outBit" shape
     return result;
 }
 void Cpu::testBit(u8 value, u8 bitNum) {
@@ -347,14 +436,30 @@ int Cpu::executeCbOpcode(u8 cbOpcode) {
         u8 opIndex = (cbOpcode >> 3) & 0x07;
         u8 result = value;
         switch (opIndex) {
-            case 0: result = rlc(value);  break;
-            case 1: result = rrc(value);  break;
-            case 2: result = rl(value);   break;
-            case 3: result = rr(value);   break;
-            case 4: result = sla(value);  break;
-            case 5: result = sra(value);  break;
-            case 6: result = swap(value); break;
-            case 7: result = srl(value);  break;
+            case 0:
+                result = rlc(value);
+                break;
+            case 1:
+                result = rrc(value);
+                break;
+            case 2:
+                result = rl(value);
+                break;
+            case 3:
+                result = rr(value);
+                break;
+            case 4:
+                result = sla(value);
+                break;
+            case 5:
+                result = sra(value);
+                break;
+            case 6:
+                result = swap(value);
+                break;
+            case 7:
+                result = srl(value);
+                break;
         }
         writeReg8(regIndex, result);
         return cost;
@@ -364,7 +469,7 @@ int Cpu::executeCbOpcode(u8 cbOpcode) {
         case 1: // BIT
             testBit(value, bitNum);
             return (regIndex == 6) ? 12 : 8; // BIT's memory-access cost differs from RES/SET's
-        case 2: // RES
+        case 2:                              // RES
             writeReg8(regIndex, resetBit(value, bitNum));
             return cost;
         case 3: // SET
@@ -414,9 +519,14 @@ int Cpu::step() {
     }
 
     switch (opcode) {
-        case 0x00: return 4; // NOP
-        case 0xF3: imeFlag = false; return 4; // DI
-        case 0xFB: imeFlag = true;  return 4; // EI
+        case 0x00:
+            return 4; // NOP
+        case 0xF3:
+            imeFlag = false;
+            return 4; // DI
+        case 0xFB:
+            imeFlag = true;
+            return 4; // EI
         // case 0x06: bc.hi = fetch8(); return 8; // LD B, n
         case 0xC3: { // JP nn — unconditional
             u16 addr = fetch16();
@@ -434,7 +544,7 @@ int Cpu::step() {
             return 16;
         }
         case 0xFA: { // LD A, [a16]
-           u16 addr = fetch16();
+            u16 addr = fetch16();
             a = bus.read8(addr);
             return 16;
         }
@@ -451,7 +561,10 @@ int Cpu::step() {
             a = bus.read8(static_cast<u16>(0xFF00 | bc.lo));
             return 8;
         }
-        case 0xC2: case 0xCA: case 0xD2: case 0xDA: { // JP cc, nn
+        case 0xC2:
+        case 0xCA:
+        case 0xD2:
+        case 0xDA: { // JP cc, nn
             u16 addr = fetch16();
             u8 condIndex = (opcode >> 3) & 0x03;
             if (checkCondition(condIndex)) {
@@ -460,7 +573,10 @@ int Cpu::step() {
             }
             return 12;
         }
-        case 0x20: case 0x30: case 0x28: case 0x38: { // JR cc, e8
+        case 0x20:
+        case 0x30:
+        case 0x28:
+        case 0x38: { // JR cc, e8
             u16 delta = fetch8();
             u8 condIndex = (opcode >> 3) & 0x03;
             if (checkCondition(condIndex)) {
@@ -469,25 +585,38 @@ int Cpu::step() {
             }
             return 8;
         }
-        case 0xC5: case 0xD5: case 0xE5: case 0xF5: { // PUSH rr
+        case 0xC5:
+        case 0xD5:
+        case 0xE5:
+        case 0xF5: { // PUSH rr
             u8 index = (opcode >> 4) & 0x03;
-            u16 value = (index == 3) ? getAF()
-                    : (index == 0) ? bc.get()
-                    : (index == 1) ? de.get()
-                    : hl.get();
+            u16 value = (index == 3)   ? getAF()
+                        : (index == 0) ? bc.get()
+                        : (index == 1) ? de.get()
+                                       : hl.get();
             push16(value);
             return 16;
         }
-        case 0xC1: case 0xD1: case 0xE1: case 0xF1: { // POP rr
+        case 0xC1:
+        case 0xD1:
+        case 0xE1:
+        case 0xF1: { // POP rr
             u8 index = (opcode >> 4) & 0x03;
             u16 value = pop16();
-            if (index == 3) setAF(value);
-            else if (index == 0) bc.set(value);
-            else if (index == 1) de.set(value);
-            else hl.set(value);
+            if (index == 3)
+                setAF(value);
+            else if (index == 0)
+                bc.set(value);
+            else if (index == 1)
+                de.set(value);
+            else
+                hl.set(value);
             return 12;
         }
-        case 0xC4: case 0xCC: case 0xD4: case 0xDC: { // CALL cc, a16
+        case 0xC4:
+        case 0xCC:
+        case 0xD4:
+        case 0xDC: { // CALL cc, a16
             u16 addr = fetch16();
             u8 condIndex = (opcode >> 3) & 0x03;
             if (checkCondition(condIndex)) {
@@ -512,8 +641,11 @@ int Cpu::step() {
             imeFlag = true;
             return 16;
         }
-        case 0xC0: case 0xC8: case 0xD0: case 0xD8: { // RET cc
-        u8 condIndex = (opcode >> 3) & 0x03;
+        case 0xC0:
+        case 0xC8:
+        case 0xD0:
+        case 0xD8: { // RET cc
+            u8 condIndex = (opcode >> 3) & 0x03;
             if (checkCondition(condIndex)) {
                 pc = pop16();
                 return 20;
@@ -598,14 +730,21 @@ int Cpu::step() {
             bool setCarry = false;
 
             if (!f.subtract) {
-                if (f.halfCarry || (a & 0x0F) > 0x09) correction |= 0x06;
-                if (f.carry || a > 0x99) { correction |= 0x60; setCarry = true; }
+                if (f.halfCarry || (a & 0x0F) > 0x09)
+                    correction |= 0x06;
+                if (f.carry || a > 0x99) {
+                    correction |= 0x60;
+                    setCarry = true;
+                }
                 a = static_cast<u8>(a + correction);
             } else {
-                if (f.halfCarry) correction |= 0x06;
-                if (f.carry) correction |= 0x60;
+                if (f.halfCarry)
+                    correction |= 0x06;
+                if (f.carry)
+                    correction |= 0x60;
                 a = static_cast<u8>(a - correction);
-                setCarry = f.carry; // carry never gets newly SET on the subtraction path, only preserved
+                setCarry =
+                    f.carry; // carry never gets newly SET on the subtraction path, only preserved
             }
 
             f.zero = (a == 0);
@@ -649,44 +788,96 @@ int Cpu::step() {
             sp = hl.get();
             return 8;
         }
-        case 0x09: addToHL(bc.get()); return 8;
-        case 0x19: addToHL(de.get()); return 8;
-        case 0x29: addToHL(hl.get()); return 8;
-        case 0x39: addToHL(sp);       return 8;
+        case 0x09:
+            addToHL(bc.get());
+            return 8;
+        case 0x19:
+            addToHL(de.get());
+            return 8;
+        case 0x29:
+            addToHL(hl.get());
+            return 8;
+        case 0x39:
+            addToHL(sp);
+            return 8;
 
-        case 0x01: case 0x11: case 0x21: case 0x31:
+        case 0x01:
+        case 0x11:
+        case 0x21:
+        case 0x31:
             return executeLoad16Immediate(opcode);
-        case 0x06: case 0x0E: case 0x16: case 0x1E:
-        case 0x26: case 0x2E: case 0x36: case 0x3E:
+        case 0x06:
+        case 0x0E:
+        case 0x16:
+        case 0x1E:
+        case 0x26:
+        case 0x2E:
+        case 0x36:
+        case 0x3E:
             return executeLoad8Immediate(opcode);
-        case 0x02: case 0x0A: case 0x12: case 0x1A:
-        case 0x22: case 0x2A: case 0x32: case 0x3A:
+        case 0x02:
+        case 0x0A:
+        case 0x12:
+        case 0x1A:
+        case 0x22:
+        case 0x2A:
+        case 0x32:
+        case 0x3A:
             return executeIndirectA(opcode);
-        case 0x04: case 0x0C: case 0x14: case 0x1C:
-        case 0x24: case 0x2C: case 0x34: case 0x3C:
+        case 0x04:
+        case 0x0C:
+        case 0x14:
+        case 0x1C:
+        case 0x24:
+        case 0x2C:
+        case 0x34:
+        case 0x3C:
             return incDecReg8(opcode, true);
-        case 0x05: case 0x0D: case 0x15: case 0x1D:
-        case 0x25: case 0x2D: case 0x35: case 0x3D:
+        case 0x05:
+        case 0x0D:
+        case 0x15:
+        case 0x1D:
+        case 0x25:
+        case 0x2D:
+        case 0x35:
+        case 0x3D:
             return incDecReg8(opcode, false);
-        case 0xC6: case 0xCE: case 0xD6: case 0xDE:
-        case 0xE6: case 0xEE: case 0xF6: case 0xFE:
+        case 0xC6:
+        case 0xCE:
+        case 0xD6:
+        case 0xDE:
+        case 0xE6:
+        case 0xEE:
+        case 0xF6:
+        case 0xFE:
             return executeArithmeticImmediate(opcode);
-        case 0x03: case 0x0B: case 0x13: case 0x1B:
-        case 0x23: case 0x2B: case 0x33: case 0x3B:
+        case 0x03:
+        case 0x0B:
+        case 0x13:
+        case 0x1B:
+        case 0x23:
+        case 0x2B:
+        case 0x33:
+        case 0x3B:
             return incDecReg16(opcode);
-        case 0xC7: case 0xCF: case 0xD7: case 0xDF:
-        case 0xE7: case 0xEF: case 0xF7: case 0xFF: {
+        case 0xC7:
+        case 0xCF:
+        case 0xD7:
+        case 0xDF:
+        case 0xE7:
+        case 0xEF:
+        case 0xF7:
+        case 0xFF: {
             u8 index = (opcode >> 3) & 0x07;
             push16(pc);
             pc = static_cast<u16>(index * 8);
             return 16;
         }
         default:
-            std::fprintf(stderr, "Unimplemented opcode: 0x%02X at PC=0x%04X\n",
-                         opcode, static_cast<unsigned>(pc - 1));
+            std::fprintf(stderr, "Unimplemented opcode: 0x%02X at PC=0x%04X\n", opcode,
+                         static_cast<unsigned>(pc - 1));
             std::exit(1);
     }
-
 }
 
-}  // namespace gb
+} // namespace gb

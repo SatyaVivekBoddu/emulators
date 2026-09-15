@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-
 namespace gb {
 
 class Cartridge {
@@ -17,4 +16,4 @@ private:
     std::vector<u8> rom;
 };
 
-}  // namespace gb
+} // namespace gb

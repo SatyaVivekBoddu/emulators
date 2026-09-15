@@ -40,27 +40,51 @@ struct System {
 // and CB-prefixed opcode tables) to/from the actual register or memory-through-HL.
 u8 getRegValue(System& sys, u8 index) {
     switch (index) {
-        case 0: return sys.cpu.bc.hi;
-        case 1: return sys.cpu.bc.lo;
-        case 2: return sys.cpu.de.hi;
-        case 3: return sys.cpu.de.lo;
-        case 4: return sys.cpu.hl.hi;
-        case 5: return sys.cpu.hl.lo;
-        case 6: return sys.bus.read8(sys.cpu.hl.get());
-        default: return sys.cpu.a; // 7
+        case 0:
+            return sys.cpu.bc.hi;
+        case 1:
+            return sys.cpu.bc.lo;
+        case 2:
+            return sys.cpu.de.hi;
+        case 3:
+            return sys.cpu.de.lo;
+        case 4:
+            return sys.cpu.hl.hi;
+        case 5:
+            return sys.cpu.hl.lo;
+        case 6:
+            return sys.bus.read8(sys.cpu.hl.get());
+        default:
+            return sys.cpu.a; // 7
     }
 }
 
 void setRegValue(System& sys, u8 index, u8 value) {
     switch (index) {
-        case 0: sys.cpu.bc.hi = value; break;
-        case 1: sys.cpu.bc.lo = value; break;
-        case 2: sys.cpu.de.hi = value; break;
-        case 3: sys.cpu.de.lo = value; break;
-        case 4: sys.cpu.hl.hi = value; break;
-        case 5: sys.cpu.hl.lo = value; break;
-        case 6: sys.bus.write8(sys.cpu.hl.get(), value); break;
-        default: sys.cpu.a = value; break; // 7
+        case 0:
+            sys.cpu.bc.hi = value;
+            break;
+        case 1:
+            sys.cpu.bc.lo = value;
+            break;
+        case 2:
+            sys.cpu.de.hi = value;
+            break;
+        case 3:
+            sys.cpu.de.lo = value;
+            break;
+        case 4:
+            sys.cpu.hl.hi = value;
+            break;
+        case 5:
+            sys.cpu.hl.lo = value;
+            break;
+        case 6:
+            sys.bus.write8(sys.cpu.hl.get(), value);
+            break;
+        default:
+            sys.cpu.a = value;
+            break; // 7
     }
 }
 
@@ -142,10 +166,12 @@ TEST_CASE("Cpu executes LD (HL),A and LD A,(HL): through-memory loads, 8 cycles"
 }
 
 TEST_CASE("Cpu executes LD r,n for all 8 destinations, including (HL)") {
-    struct Case { u8 opcode; int cycles; };
+    struct Case {
+        u8 opcode;
+        int cycles;
+    };
     static constexpr Case cases[] = {
-        {0x06, 8}, {0x0E, 8}, {0x16, 8}, {0x1E, 8},
-        {0x26, 8}, {0x2E, 8}, {0x36, 12}, {0x3E, 8},
+        {0x06, 8}, {0x0E, 8}, {0x16, 8}, {0x1E, 8}, {0x26, 8}, {0x2E, 8}, {0x36, 12}, {0x3E, 8},
     };
 
     for (auto [opcode, cycles] : cases) {
@@ -154,22 +180,44 @@ TEST_CASE("Cpu executes LD r,n for all 8 destinations, including (HL)") {
 
         CHECK(sys.cpu.step() == cycles);
         switch (opcode) {
-            case 0x06: CHECK(sys.cpu.bc.hi == 0x42); break;
-            case 0x0E: CHECK(sys.cpu.bc.lo == 0x42); break;
-            case 0x16: CHECK(sys.cpu.de.hi == 0x42); break;
-            case 0x1E: CHECK(sys.cpu.de.lo == 0x42); break;
-            case 0x26: CHECK(sys.cpu.hl.hi == 0x42); break;
-            case 0x2E: CHECK(sys.cpu.hl.lo == 0x42); break;
-            case 0x36: CHECK(sys.bus.read8(0xC050) == 0x42); break;
-            case 0x3E: CHECK(sys.cpu.a == 0x42); break; // regression: was landing in B
+            case 0x06:
+                CHECK(sys.cpu.bc.hi == 0x42);
+                break;
+            case 0x0E:
+                CHECK(sys.cpu.bc.lo == 0x42);
+                break;
+            case 0x16:
+                CHECK(sys.cpu.de.hi == 0x42);
+                break;
+            case 0x1E:
+                CHECK(sys.cpu.de.lo == 0x42);
+                break;
+            case 0x26:
+                CHECK(sys.cpu.hl.hi == 0x42);
+                break;
+            case 0x2E:
+                CHECK(sys.cpu.hl.lo == 0x42);
+                break;
+            case 0x36:
+                CHECK(sys.bus.read8(0xC050) == 0x42);
+                break;
+            case 0x3E:
+                CHECK(sys.cpu.a == 0x42);
+                break; // regression: was landing in B
         }
     }
 }
 
 TEST_CASE("Cpu executes LD rr,nn for all 4 register pairs") {
-    struct Case { u8 opcode; u16 expected; };
+    struct Case {
+        u8 opcode;
+        u16 expected;
+    };
     static constexpr Case cases[] = {
-        {0x01, 0x1234}, {0x11, 0x5678}, {0x21, 0x9ABC}, {0x31, 0xDEF0},
+        {0x01, 0x1234},
+        {0x11, 0x5678},
+        {0x21, 0x9ABC},
+        {0x31, 0xDEF0},
     };
 
     for (auto [opcode, expected] : cases) {
@@ -177,22 +225,36 @@ TEST_CASE("Cpu executes LD rr,nn for all 4 register pairs") {
 
         CHECK(sys.cpu.step() == 12);
         switch (opcode) {
-            case 0x01: CHECK(sys.cpu.bc.get() == expected); break;
-            case 0x11: CHECK(sys.cpu.de.get() == expected); break;
-            case 0x21: CHECK(sys.cpu.hl.get() == expected); break;
-            case 0x31: CHECK(sys.cpu.sp == expected); break;
+            case 0x01:
+                CHECK(sys.cpu.bc.get() == expected);
+                break;
+            case 0x11:
+                CHECK(sys.cpu.de.get() == expected);
+                break;
+            case 0x21:
+                CHECK(sys.cpu.hl.get() == expected);
+                break;
+            case 0x31:
+                CHECK(sys.cpu.sp == expected);
+                break;
         }
         // regression: a broken index calc used to smear this write across all 4 pairs
-        if (opcode != 0x01) CHECK(sys.cpu.bc.get() == 0);
-        if (opcode != 0x11) CHECK(sys.cpu.de.get() == 0);
-        if (opcode != 0x21) CHECK(sys.cpu.hl.get() == 0);
+        if (opcode != 0x01)
+            CHECK(sys.cpu.bc.get() == 0);
+        if (opcode != 0x11)
+            CHECK(sys.cpu.de.get() == 0);
+        if (opcode != 0x21)
+            CHECK(sys.cpu.hl.get() == 0);
     }
 }
 
 // --- Cpu: 16-bit and 8-bit inc/dec -----------------------------------------
 
 TEST_CASE("Cpu executes 16-bit INC/DEC for all 4 pairs, leaving the others untouched") {
-    struct Case { u8 opcode; int delta; };
+    struct Case {
+        u8 opcode;
+        int delta;
+    };
     static constexpr Case cases[] = {
         {0x03, +1}, {0x0B, -1}, // BC
         {0x13, +1}, {0x1B, -1}, // DE
@@ -212,7 +274,7 @@ TEST_CASE("Cpu executes 16-bit INC/DEC for all 4 pairs, leaving the others untou
         CHECK(sys.cpu.bc.get() == 0x1000 + (pair == 0 ? delta : 0));
         CHECK(sys.cpu.de.get() == 0x2000 + (pair == 1 ? delta : 0));
         CHECK(sys.cpu.hl.get() == 0x3000 + (pair == 2 ? delta : 0));
-        CHECK(sys.cpu.sp       == 0x4000 + (pair == 3 ? delta : 0));
+        CHECK(sys.cpu.sp == 0x4000 + (pair == 3 ? delta : 0));
     }
 }
 
@@ -237,10 +299,14 @@ TEST_CASE("Cpu executes 8-bit INC/DEC: zero flag, half-carry/borrow, carry untou
 // --- Cpu: indirect A loads ---------------------------------------------
 
 TEST_CASE("Cpu executes indirect A loads/stores via BC, DE, HL+, HL-") {
-    struct Case { u8 opcode; bool isLoad; int hlDelta; };
+    struct Case {
+        u8 opcode;
+        bool isLoad;
+        int hlDelta;
+    };
     static constexpr Case cases[] = {
-        {0x02, false, 0}, {0x0A, true, 0},  // (BC),A / A,(BC)
-        {0x12, false, 0}, {0x1A, true, 0},  // (DE),A / A,(DE)
+        {0x02, false, 0},  {0x0A, true, 0},  // (BC),A / A,(BC)
+        {0x12, false, 0},  {0x1A, true, 0},  // (DE),A / A,(DE)
         {0x22, false, +1}, {0x2A, true, +1}, // (HL+),A / A,(HL+)
         {0x32, false, -1}, {0x3A, true, -1}, // (HL-),A / A,(HL-)
     };
@@ -252,18 +318,23 @@ TEST_CASE("Cpu executes indirect A loads/stores via BC, DE, HL+, HL-") {
         sys.cpu.hl.set(0xC300);
         sys.cpu.a = 0x5A;
 
-        u16 targetAddr = (opcode == 0x02 || opcode == 0x0A) ? 0xC100
-                        : (opcode == 0x12 || opcode == 0x1A) ? 0xC200
-                        : 0xC300;
+        u16 targetAddr = (opcode == 0x02 || opcode == 0x0A)   ? 0xC100
+                         : (opcode == 0x12 || opcode == 0x1A) ? 0xC200
+                                                              : 0xC300;
 
-        if (isLoad) sys.bus.write8(targetAddr, 0x77);
+        if (isLoad)
+            sys.bus.write8(targetAddr, 0x77);
 
         CHECK(sys.cpu.step() == 8);
-        if (isLoad) CHECK(sys.cpu.a == 0x77);
-        else CHECK(sys.bus.read8(targetAddr) == 0x5A);
+        if (isLoad)
+            CHECK(sys.cpu.a == 0x77);
+        else
+            CHECK(sys.bus.read8(targetAddr) == 0x5A);
 
-        if (hlDelta != 0) CHECK(sys.cpu.hl.get() == static_cast<u16>(0xC300 + hlDelta));
-        else CHECK(sys.cpu.hl.get() == 0xC300); // untouched for BC/DE opcodes
+        if (hlDelta != 0)
+            CHECK(sys.cpu.hl.get() == static_cast<u16>(0xC300 + hlDelta));
+        else
+            CHECK(sys.cpu.hl.get() == 0xC300); // untouched for BC/DE opcodes
     }
 }
 
@@ -352,7 +423,7 @@ TEST_CASE("Cpu executes PUSH/POP round trips for all 4 pairs, including AF's fla
     u16 initialSp = sys.cpu.sp;
     CHECK(sys.cpu.step() == 16);
     CHECK(sys.cpu.sp == initialSp - 2);
-    CHECK(sys.bus.read8(sys.cpu.sp)     == 0x34); // low byte at the lower address
+    CHECK(sys.bus.read8(sys.cpu.sp) == 0x34); // low byte at the lower address
     CHECK(sys.bus.read8(sys.cpu.sp + 1) == 0x12);
     CHECK(sys.cpu.step() == 12);
     CHECK(sys.cpu.de.get() == 0x1234);
@@ -364,8 +435,8 @@ TEST_CASE("Cpu executes PUSH/POP round trips for all 4 pairs, including AF's fla
     afSys.cpu.f.carry = true;
     afSys.cpu.step();
     afSys.cpu.step();
-    CHECK(afSys.cpu.bc.hi == 0x80);       // A
-    CHECK(afSys.cpu.bc.lo == 0x90);       // F byte: zero(0x80) | carry(0x10)
+    CHECK(afSys.cpu.bc.hi == 0x80); // A
+    CHECK(afSys.cpu.bc.lo == 0x90); // F byte: zero(0x80) | carry(0x10)
 }
 
 TEST_CASE("Cpu executes CALL then RET: round trips PC through the stack") {
@@ -378,7 +449,7 @@ TEST_CASE("Cpu executes CALL then RET: round trips PC through the stack") {
 }
 
 TEST_CASE("Cpu executes RET cc: taken and not-taken") {
-    System taken({0xC0}); // RET NZ
+    System taken({0xC0});     // RET NZ
     taken.cpu.f.zero = false; // NZ condition holds
     taken.cpu.sp = 0xFFFC;
     taken.bus.write8(0xFFFC, 0x34); // low byte of return address
@@ -393,7 +464,7 @@ TEST_CASE("Cpu executes RET cc: taken and not-taken") {
     notTaken.bus.write8(0xFFFC, 0x34);
     notTaken.bus.write8(0xFFFD, 0x12);
     CHECK(notTaken.cpu.step() == 8);
-    CHECK(notTaken.cpu.pc == 0x101); // fell through, just past the 1-byte opcode
+    CHECK(notTaken.cpu.pc == 0x101);  // fell through, just past the 1-byte opcode
     CHECK(notTaken.cpu.sp == 0xFFFC); // untouched — nothing was popped
 }
 TEST_CASE("Cpu executes JR e8: unconditional, both directions") {
@@ -401,14 +472,15 @@ TEST_CASE("Cpu executes JR e8: unconditional, both directions") {
     CHECK(forward.cpu.step() == 12);
     CHECK(forward.cpu.pc == 0x107);
 
-    System backward({0x00, 0x00, 0x00, 0x00, 0x00, 0x18, static_cast<u8>(-4)}); // jump backward by 4
+    System backward(
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x18, static_cast<u8>(-4)}); // jump backward by 4
     backward.cpu.pc = 0x105; // start execution at the JR instruction directly
     CHECK(backward.cpu.step() == 12);
     CHECK(backward.cpu.pc == 0x103); // 0x105 + 2 (past the instruction) - 4 = 0x103
 }
 TEST_CASE("Cpu executes RLCA/RRCA/RLA/RRA: Z always forced false, never computed") {
     System sys({0x07}); // RLCA
-    sys.cpu.a = 0x00; // a value that WOULD make Z true if it were computed
+    sys.cpu.a = 0x00;   // a value that WOULD make Z true if it were computed
     sys.cpu.step();
     CHECK(sys.cpu.a == 0x00);
     CHECK(sys.cpu.f.zero == false); // forced false, even though the result is genuinely zero
@@ -416,18 +488,18 @@ TEST_CASE("Cpu executes RLCA/RRCA/RLA/RRA: Z always forced false, never computed
 // --- Cpu: interrupts ---------------------------------------------------
 
 TEST_CASE("Cpu services a pending interrupt: pushes PC, jumps to vector, clears IF only") {
-    System sys({0xFB, 0x00}); // EI ; NOP
+    System sys({0xFB, 0x00});     // EI ; NOP
     sys.bus.write8(0xFFFF, 0x01); // IE: VBlank enabled
     sys.bus.write8(0xFF0F, 0x01); // IF: VBlank pending
 
-    sys.cpu.step(); // EI (IME takes effect immediately in this implementation)
+    sys.cpu.step();              // EI (IME takes effect immediately in this implementation)
     CHECK(sys.cpu.step() == 20); // interrupt dispatch instead of the NOP
 
-    CHECK(sys.cpu.pc == 0x0040); // VBlank vector
-    CHECK(sys.bus.read8(0xFF0F) == 0x00); // pending flag cleared...
-    CHECK(sys.bus.read8(0xFFFF) == 0x01); // ...without touching the enable register
-    CHECK(sys.bus.read8(sys.cpu.sp) == 0x01);      // low byte of return address 0x0101
-    CHECK(sys.bus.read8(sys.cpu.sp + 1) == 0x01);  // high byte
+    CHECK(sys.cpu.pc == 0x0040);                  // VBlank vector
+    CHECK(sys.bus.read8(0xFF0F) == 0x00);         // pending flag cleared...
+    CHECK(sys.bus.read8(0xFFFF) == 0x01);         // ...without touching the enable register
+    CHECK(sys.bus.read8(sys.cpu.sp) == 0x01);     // low byte of return address 0x0101
+    CHECK(sys.bus.read8(sys.cpu.sp + 1) == 0x01); // high byte
 }
 
 // --- Cpu: LD r,r full opcode matrix ----------------------------------------
@@ -436,7 +508,8 @@ TEST_CASE("Cpu executes LD r,r for all 64 src/dest combinations (0x40-0x7F, excl
     for (u8 dest = 0; dest < 8; ++dest) {
         for (u8 src = 0; src < 8; ++src) {
             u8 opcode = static_cast<u8>(0x40 | (dest << 3) | src);
-            if (opcode == 0x76) continue; // HALT, not a load
+            if (opcode == 0x76)
+                continue; // HALT, not a load
 
             System sys({opcode});
             sys.cpu.bc.set(0x1122);
@@ -546,12 +619,13 @@ TEST_CASE("Cpu executes CP r: borrow flags without modifying A") {
     sys.cpu.a = 0x02;
     sys.cpu.bc.hi = 0x05;
     CHECK(sys.cpu.step() == 4);
-    CHECK(sys.cpu.a == 0x02); // unchanged
+    CHECK(sys.cpu.a == 0x02);       // unchanged
     CHECK(sys.cpu.f.carry == true); // borrow: 2 < 5
     CHECK(sys.cpu.f.zero == false);
 }
 
-TEST_CASE("Cpu executes every register-register arithmetic opcode (0x80-0xBF): all 64 combinations run at the right cycle cost") {
+TEST_CASE("Cpu executes every register-register arithmetic opcode (0x80-0xBF): all 64 combinations "
+          "run at the right cycle cost") {
     for (u8 opIndex = 0; opIndex < 8; ++opIndex) {
         for (u8 srcIndex = 0; srcIndex < 8; ++srcIndex) {
             u8 opcode = static_cast<u8>(0x80 | (opIndex << 3) | srcIndex);
@@ -617,7 +691,7 @@ TEST_CASE("Cpu executes arithmetic-immediate for all 8 operations, 8 cycles each
         System sys({0xFE, 0x10});
         sys.cpu.a = 0x05;
         CHECK(sys.cpu.step() == 8);
-        CHECK(sys.cpu.a == 0x05); // unchanged
+        CHECK(sys.cpu.a == 0x05);       // unchanged
         CHECK(sys.cpu.f.carry == true); // borrow: 5 < 0x10
     }
 }
@@ -625,18 +699,33 @@ TEST_CASE("Cpu executes arithmetic-immediate for all 8 operations, 8 cycles each
 // --- Cpu: PUSH/POP full matrix -----------------------------------------------
 
 TEST_CASE("Cpu executes PUSH/POP symmetric round trip for all 4 pairs") {
-    struct Case { u8 pushOp; u8 popOp; };
+    struct Case {
+        u8 pushOp;
+        u8 popOp;
+    };
     static constexpr Case cases[] = {
-        {0xC5, 0xC1}, {0xD5, 0xD1}, {0xE5, 0xE1}, {0xF5, 0xF1},
+        {0xC5, 0xC1},
+        {0xD5, 0xD1},
+        {0xE5, 0xE1},
+        {0xF5, 0xF1},
     };
     for (auto [pushOp, popOp] : cases) {
         System sys({pushOp, popOp});
         u16 testValue = 0x1234;
         switch (pushOp) {
-            case 0xC5: sys.cpu.bc.set(testValue); break;
-            case 0xD5: sys.cpu.de.set(testValue); break;
-            case 0xE5: sys.cpu.hl.set(testValue); break;
-            case 0xF5: sys.cpu.a = 0x12; sys.cpu.f.fromByte(0xF0); break;
+            case 0xC5:
+                sys.cpu.bc.set(testValue);
+                break;
+            case 0xD5:
+                sys.cpu.de.set(testValue);
+                break;
+            case 0xE5:
+                sys.cpu.hl.set(testValue);
+                break;
+            case 0xF5:
+                sys.cpu.a = 0x12;
+                sys.cpu.f.fromByte(0xF0);
+                break;
         }
         u16 initialSp = sys.cpu.sp;
         CHECK(sys.cpu.step() == 16); // PUSH
@@ -644,9 +733,15 @@ TEST_CASE("Cpu executes PUSH/POP symmetric round trip for all 4 pairs") {
         CHECK(sys.cpu.step() == 12); // POP
 
         switch (popOp) {
-            case 0xC1: CHECK(sys.cpu.bc.get() == testValue); break;
-            case 0xD1: CHECK(sys.cpu.de.get() == testValue); break;
-            case 0xE1: CHECK(sys.cpu.hl.get() == testValue); break;
+            case 0xC1:
+                CHECK(sys.cpu.bc.get() == testValue);
+                break;
+            case 0xD1:
+                CHECK(sys.cpu.de.get() == testValue);
+                break;
+            case 0xE1:
+                CHECK(sys.cpu.hl.get() == testValue);
+                break;
             case 0xF1:
                 CHECK(sys.cpu.a == 0x12);
                 CHECK(sys.cpu.f.toByte() == 0xF0);
@@ -725,7 +820,10 @@ TEST_CASE("Cpu executes LDH [C],A and LDH A,[C]") {
 // --- Cpu: conditional control flow, full condition matrix -------------------
 
 TEST_CASE("Cpu executes JP cc,nn for all 4 conditions, taken and not taken") {
-    struct Case { u8 opcode; int condIndex; };
+    struct Case {
+        u8 opcode;
+        int condIndex;
+    };
     static constexpr Case cases[] = {
         {0xC2, 0}, {0xCA, 1}, {0xD2, 2}, {0xDA, 3}, // NZ, Z, NC, C
     };
@@ -733,10 +831,18 @@ TEST_CASE("Cpu executes JP cc,nn for all 4 conditions, taken and not taken") {
         for (bool takenExpected : {true, false}) {
             System sys({opcode, 0x00, 0x90});
             switch (condIndex) {
-                case 0: sys.cpu.f.zero = !takenExpected; break;
-                case 1: sys.cpu.f.zero = takenExpected; break;
-                case 2: sys.cpu.f.carry = !takenExpected; break;
-                case 3: sys.cpu.f.carry = takenExpected; break;
+                case 0:
+                    sys.cpu.f.zero = !takenExpected;
+                    break;
+                case 1:
+                    sys.cpu.f.zero = takenExpected;
+                    break;
+                case 2:
+                    sys.cpu.f.carry = !takenExpected;
+                    break;
+                case 3:
+                    sys.cpu.f.carry = takenExpected;
+                    break;
             }
             u16 startPc = sys.cpu.pc;
             int cycles = sys.cpu.step();
@@ -752,7 +858,10 @@ TEST_CASE("Cpu executes JP cc,nn for all 4 conditions, taken and not taken") {
 }
 
 TEST_CASE("Cpu executes JR cc,e8 for all 4 conditions, taken and not taken") {
-    struct Case { u8 opcode; int condIndex; };
+    struct Case {
+        u8 opcode;
+        int condIndex;
+    };
     static constexpr Case cases[] = {
         {0x20, 0}, {0x28, 1}, {0x30, 2}, {0x38, 3}, // NZ, Z, NC, C
     };
@@ -760,10 +869,18 @@ TEST_CASE("Cpu executes JR cc,e8 for all 4 conditions, taken and not taken") {
         for (bool takenExpected : {true, false}) {
             System sys({opcode, 0x05});
             switch (condIndex) {
-                case 0: sys.cpu.f.zero = !takenExpected; break;
-                case 1: sys.cpu.f.zero = takenExpected; break;
-                case 2: sys.cpu.f.carry = !takenExpected; break;
-                case 3: sys.cpu.f.carry = takenExpected; break;
+                case 0:
+                    sys.cpu.f.zero = !takenExpected;
+                    break;
+                case 1:
+                    sys.cpu.f.zero = takenExpected;
+                    break;
+                case 2:
+                    sys.cpu.f.carry = !takenExpected;
+                    break;
+                case 3:
+                    sys.cpu.f.carry = takenExpected;
+                    break;
             }
             u16 startPc = sys.cpu.pc;
             int cycles = sys.cpu.step();
@@ -779,7 +896,10 @@ TEST_CASE("Cpu executes JR cc,e8 for all 4 conditions, taken and not taken") {
 }
 
 TEST_CASE("Cpu executes CALL cc,a16 for all 4 conditions, taken and not taken") {
-    struct Case { u8 opcode; int condIndex; };
+    struct Case {
+        u8 opcode;
+        int condIndex;
+    };
     static constexpr Case cases[] = {
         {0xC4, 0}, {0xCC, 1}, {0xD4, 2}, {0xDC, 3}, // NZ, Z, NC, C
     };
@@ -787,10 +907,18 @@ TEST_CASE("Cpu executes CALL cc,a16 for all 4 conditions, taken and not taken") 
         for (bool takenExpected : {true, false}) {
             System sys({opcode, 0x00, 0x90});
             switch (condIndex) {
-                case 0: sys.cpu.f.zero = !takenExpected; break;
-                case 1: sys.cpu.f.zero = takenExpected; break;
-                case 2: sys.cpu.f.carry = !takenExpected; break;
-                case 3: sys.cpu.f.carry = takenExpected; break;
+                case 0:
+                    sys.cpu.f.zero = !takenExpected;
+                    break;
+                case 1:
+                    sys.cpu.f.zero = takenExpected;
+                    break;
+                case 2:
+                    sys.cpu.f.carry = !takenExpected;
+                    break;
+                case 3:
+                    sys.cpu.f.carry = takenExpected;
+                    break;
             }
             u16 initialSp = sys.cpu.sp;
             int cycles = sys.cpu.step();
@@ -810,7 +938,10 @@ TEST_CASE("Cpu executes CALL cc,a16 for all 4 conditions, taken and not taken") 
 }
 
 TEST_CASE("Cpu executes RET cc for all 4 conditions, taken and not taken") {
-    struct Case { u8 opcode; int condIndex; };
+    struct Case {
+        u8 opcode;
+        int condIndex;
+    };
     static constexpr Case cases[] = {
         {0xC0, 0}, {0xC8, 1}, {0xD0, 2}, {0xD8, 3}, // NZ, Z, NC, C
     };
@@ -818,10 +949,18 @@ TEST_CASE("Cpu executes RET cc for all 4 conditions, taken and not taken") {
         for (bool takenExpected : {true, false}) {
             System sys({opcode});
             switch (condIndex) {
-                case 0: sys.cpu.f.zero = !takenExpected; break;
-                case 1: sys.cpu.f.zero = takenExpected; break;
-                case 2: sys.cpu.f.carry = !takenExpected; break;
-                case 3: sys.cpu.f.carry = takenExpected; break;
+                case 0:
+                    sys.cpu.f.zero = !takenExpected;
+                    break;
+                case 1:
+                    sys.cpu.f.zero = takenExpected;
+                    break;
+                case 2:
+                    sys.cpu.f.carry = !takenExpected;
+                    break;
+                case 3:
+                    sys.cpu.f.carry = takenExpected;
+                    break;
             }
             sys.cpu.sp = 0xFFFC;
             sys.bus.write8(0xFFFC, 0x34);
@@ -863,7 +1002,7 @@ TEST_CASE("Cpu executes RETI: pops PC and immediately re-enables interrupts") {
     sys.bus.write8(0xFFFF, 0x01); // IE: VBlank
     sys.bus.write8(0xFF0F, 0x01); // IF: VBlank pending
     sys.bus.write8(0x9000, 0x00); // NOP at the return target — should be preempted
-    CHECK(sys.cpu.step() == 20); // interrupt dispatched because RETI set IME
+    CHECK(sys.cpu.step() == 20);  // interrupt dispatched because RETI set IME
     CHECK(sys.cpu.pc == 0x0040);
 }
 
@@ -914,7 +1053,7 @@ TEST_CASE("Cpu executes RLA: rotates A left through the carry flag") {
     sys.cpu.a = 0x80;
     sys.cpu.f.carry = true;
     CHECK(sys.cpu.step() == 4);
-    CHECK(sys.cpu.a == 0x01); // old carry shifted into bit 0
+    CHECK(sys.cpu.a == 0x01);       // old carry shifted into bit 0
     CHECK(sys.cpu.f.carry == true); // old bit 7 shifted out
 }
 
@@ -923,7 +1062,7 @@ TEST_CASE("Cpu executes RRA: rotates A right through the carry flag") {
     sys.cpu.a = 0x01;
     sys.cpu.f.carry = true;
     CHECK(sys.cpu.step() == 4);
-    CHECK(sys.cpu.a == 0x80); // old carry shifted into bit 7
+    CHECK(sys.cpu.a == 0x80);       // old carry shifted into bit 7
     CHECK(sys.cpu.f.carry == true); // old bit 0 shifted out
 }
 
@@ -931,7 +1070,7 @@ TEST_CASE("Cpu executes DAA: corrects a binary sum into valid BCD (45 + 38 = 83)
     System sys({0x80, 0x27}); // ADD A,B ; DAA
     sys.cpu.a = 0x45;
     sys.cpu.bc.hi = 0x38;
-    sys.cpu.step(); // ADD -> a = 0x7D
+    sys.cpu.step();             // ADD -> a = 0x7D
     CHECK(sys.cpu.step() == 4); // DAA
     CHECK(sys.cpu.a == 0x83);
     CHECK(sys.cpu.f.carry == false);
@@ -941,7 +1080,7 @@ TEST_CASE("Cpu executes DAA: corrects a binary difference into valid BCD (50 - 1
     System sys({0x90, 0x27}); // SUB B ; DAA
     sys.cpu.a = 0x50;
     sys.cpu.bc.hi = 0x18;
-    sys.cpu.step(); // SUB -> a = 0x38, H set from the nibble borrow
+    sys.cpu.step();             // SUB -> a = 0x38, H set from the nibble borrow
     CHECK(sys.cpu.step() == 4); // DAA
     CHECK(sys.cpu.a == 0x32);
     CHECK(sys.cpu.f.carry == false);
@@ -987,11 +1126,12 @@ TEST_CASE("Cpu executes LD HL,SP+e8: adds a signed offset, sets H/C from the low
     CHECK(carrySys.cpu.f.halfCarry == true);
 }
 
-TEST_CASE("Cpu executes ADD SP,e8: same flag math as LD HL,SP+e8 but stores into SP, and Z is always forced false") {
+TEST_CASE("Cpu executes ADD SP,e8: same flag math as LD HL,SP+e8 but stores into SP, and Z is "
+          "always forced false") {
     System sys({0xE8, 0x10});
     sys.cpu.sp = 0xFFF0;
     CHECK(sys.cpu.step() == 16);
-    CHECK(sys.cpu.sp == 0x0000); // wraps
+    CHECK(sys.cpu.sp == 0x0000);    // wraps
     CHECK(sys.cpu.f.carry == true); // 0xF0 + 0x10 carries
     CHECK(sys.cpu.f.zero == false); // forced false even though the numeric result is 0
 }
@@ -1004,8 +1144,10 @@ TEST_CASE("Cpu executes LD SP,HL") {
 }
 
 TEST_CASE("Cpu executes ADD HL,rr for all 4 sources, including ADD HL,HL") {
-    struct Case { u8 opcode; };
-    static constexpr Case cases[] = { {0x09}, {0x19}, {0x29}, {0x39} };
+    struct Case {
+        u8 opcode;
+    };
+    static constexpr Case cases[] = {{0x09}, {0x19}, {0x29}, {0x39}};
 
     for (auto [opcode] : cases) {
         System sys({opcode});
@@ -1034,7 +1176,10 @@ TEST_CASE("Cpu executes ADD HL,BC: full carry out of bit 15") {
 // --- Cpu: RST -----------------------------------------------------------------
 
 TEST_CASE("Cpu executes RST for all 8 vectors, pushing the return address") {
-    struct Case { u8 opcode; u16 vector; };
+    struct Case {
+        u8 opcode;
+        u16 vector;
+    };
     static constexpr Case cases[] = {
         {0xC7, 0x0000}, {0xCF, 0x0008}, {0xD7, 0x0010}, {0xDF, 0x0018},
         {0xE7, 0x0020}, {0xEF, 0x0028}, {0xF7, 0x0030}, {0xFF, 0x0038},
@@ -1053,7 +1198,12 @@ TEST_CASE("Cpu executes RST for all 8 vectors, pushing the return address") {
 // --- Cpu: CB-prefixed opcodes -------------------------------------------------
 
 TEST_CASE("Cpu executes CB rotate/shift group for all 8 operations and all 8 registers") {
-    struct Case { u8 opIndex; u8 input; u8 expected; bool expectCarry; };
+    struct Case {
+        u8 opIndex;
+        u8 input;
+        u8 expected;
+        bool expectCarry;
+    };
     static constexpr Case cases[] = {
         {0, 0x80, 0x01, true},  // RLC: bit7 -> bit0 and carry
         {1, 0x01, 0x80, true},  // RRC: bit0 -> bit7 and carry
@@ -1069,7 +1219,7 @@ TEST_CASE("Cpu executes CB rotate/shift group for all 8 operations and all 8 reg
         for (u8 regIndex = 0; regIndex < 8; ++regIndex) {
             u8 cbOpcode = static_cast<u8>((opIndex << 3) | regIndex);
             System sys({0xCB, cbOpcode});
-            sys.cpu.hl.set(0xC050); // valid target for regIndex == 6
+            sys.cpu.hl.set(0xC050);  // valid target for regIndex == 6
             sys.cpu.f.carry = false; // carry-in for RL/RR
             setRegValue(sys, regIndex, input);
 
@@ -1094,7 +1244,8 @@ TEST_CASE("Cpu executes CB BIT for all 8 bits and all 8 registers") {
             CHECK(setSys.cpu.f.zero == false);
             CHECK(setSys.cpu.f.subtract == false);
             CHECK(setSys.cpu.f.halfCarry == true);
-            CHECK(getRegValue(setSys, regIndex) == static_cast<u8>(1 << bitNum)); // BIT never modifies the value
+            CHECK(getRegValue(setSys, regIndex) ==
+                  static_cast<u8>(1 << bitNum)); // BIT never modifies the value
 
             System clearSys({0xCB, cbOpcode});
             clearSys.cpu.hl.set(0xC050);

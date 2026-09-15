@@ -35,13 +35,12 @@ public:
 
 private:
     std::array<u8, 0x2000> vram{};
-    static constexpr int kCyclesPerScanline = 456; // hardware constant (456 x 154 scanlines per full frame)
+    static constexpr int kCyclesPerScanline =
+        456; // hardware constant (456 x 154 scanlines per full frame)
     static constexpr u16 kTileDataBase = 0x8000;
-    u16 getBgMapBase() const {
-        return static_cast<u16>((lcdc & 0x08) ? 0x9C00 : 0x9800);
-    }
+    u16 getBgMapBase() const { return static_cast<u16>((lcdc & 0x08) ? 0x9C00 : 0x9800); }
     std::array<u8, 0xA0> oam{};
-    
+
     int scanlineCycles = 0;
     u8 statInterruptBitsAsByte() const;
 
@@ -49,13 +48,6 @@ private:
     void renderSprites();
     void advanceScanline();
     static u8 decodePixel(u8 lowByte, u8 highByte, int pixelX);
-
-
-    
-    
-
-
-
 };
 
-}  // namespace gb
+} // namespace gb

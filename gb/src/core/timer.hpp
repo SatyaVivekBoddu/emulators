@@ -7,7 +7,7 @@ namespace gb {
 class Timer {
 public:
     void tick(int cycles);
-    
+
     u8 readDiv() const { return static_cast<u8>(divCounter >> 8); }
     void writeDiv() { divCounter = 0; }
 
@@ -21,4 +21,4 @@ private:
     int timaCounter = 0;
 };
 
-}  // namespace gb
+} // namespace gb

@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdio>
 #include "types.hpp"
+#include <cstdio>
 
 namespace gb {
 
