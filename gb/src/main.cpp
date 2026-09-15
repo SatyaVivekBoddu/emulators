@@ -1,6 +1,7 @@
 #include "core/bus.hpp"
 #include "core/cartridge.hpp"
 #include "core/cpu.hpp"
+#include "core/sample_buffer.hpp"
 
 #include <SDL3/SDL.h>
 #include <cstdio>
@@ -20,6 +21,20 @@ SDL_Color shadeFor(gb::u8 colorIndex) {
         default: return SDL_Color{8, 24, 32, 255};    // darkest
     }
 }
+
+void audioCallback(void* userdata, SDL_AudioStream* stream, int additionalAmount, int totalAmount) {
+    auto* buf = static_cast<gb::SampleBuffer*>(userdata);
+    constexpr int kMaxChunk = 512;
+    float chunk[kMaxChunk];
+    while (additionalAmount > 0) {
+        int samplesToWrite = std::min(additionalAmount / static_cast<int>(sizeof(float)), kMaxChunk);
+        for (int i = 0; i < samplesToWrite; ++i) {
+            chunk[i] = buf->pop();
+        }
+        SDL_PutAudioStreamData(stream, chunk, samplesToWrite * static_cast<int>(sizeof(float)));
+        additionalAmount -= samplesToWrite * static_cast<int>(sizeof(float));
+    }
+}
 } // namespace
 
 Uint64 lastFrameTime = SDL_GetTicks();
@@ -36,12 +51,26 @@ int main(int argc, char** argv) {
         std::printf("Failed to load ROM: %s\n", argv[1]);
         return 1;
     }
+    gb::SampleBuffer sampleBuffer;
+
     gb::Bus bus(cartridge);
     gb::Cpu cpu(bus);
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         std::printf("SDL_Init failed: %s\n", SDL_GetError());
         return 1;
+    }
+    bus.getApu().setSampleBuffer(&sampleBuffer);
+
+    SDL_AudioSpec spec{};
+    spec.freq = 44100;
+    spec.format = SDL_AUDIO_F32;
+    spec.channels = 2;
+    SDL_AudioStream* audioStream = SDL_OpenAudioDeviceStream(
+    SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, audioCallback, &sampleBuffer);
+    SDL_ResumeAudioStreamDevice(audioStream);
+    if (!audioStream) {
+        std::printf("SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
     }
 
     SDL_Window* window = SDL_CreateWindow(

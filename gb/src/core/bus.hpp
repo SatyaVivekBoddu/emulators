@@ -4,6 +4,7 @@
 #include "types.hpp"
 #include "joypad.hpp"
 #include "ppu.hpp"
+#include "apu.hpp"
 #include <array>
 
 namespace gb {
@@ -25,14 +26,17 @@ public:
         if (ppu.ly == 0 && prevLy != 0) {
             interruptFlag |= 0x01; // bit 0 = VBlank
         }
+        apu.tick(cycles);
     }
     const Ppu& getPpu() const { return ppu; }
+    Apu& getApu() { return apu; }
     Joypad& getJoypad() { return joypad; }
 private:
     u8 serialControl = 0;
     Joypad joypad;
     Cartridge& cartridge;
     Ppu ppu;
+    Apu apu;
     std::array<u8, 0x2000> wram{};
     std::array<u8, 0x7F> hram{};
     u8 interruptFlag = 0; // IF, 0xFF0F

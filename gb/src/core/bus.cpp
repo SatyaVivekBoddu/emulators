@@ -35,11 +35,6 @@ u8 Bus::read8(u16 addr) const {
 void Bus::write8(u16 addr, u8 value) {
     if (addr <= 0x7FFF) { cartridge.write(addr, value); return; }
     if (addr <= 0x9FFF) {
-        // static int vramWriteCount = 0;
-        // if (vramWriteCount >= 8200 && vramWriteCount < 8210) {
-        //     std::printf("VRAM write: addr=0x%04X value=0x%02X\n", addr, value);
-        // }
-        // ++vramWriteCount;
         ppu.writeVRAM(addr, value);
         return;
     }
@@ -65,20 +60,25 @@ void Bus::write8(u16 addr, u8 value) {
         if (addr == 0xFF06) { timer.tma = value; return; }
         if (addr == 0xFF07) { timer.tac = value; return; }
         if (addr == 0xFF0F) { interruptFlag = value; return; }
+
+        if (addr == 0xFF11) { apu.channel1.writeWaveAndLength(value); return; }
+        if (addr == 0xFF12) { apu.channel1.writeEnvelope(value); return; }
+        if (addr == 0xFF13) { apu.channel1.writeFrequencyLow(value); return; }
+        if (addr == 0xFF14) { apu.channel1.writeFrequencyHigh(value); return; }
+
+        if (addr == 0xFF16) { apu.channel2.writeWaveAndLength(value); return; }
+        if (addr == 0xFF17) { apu.channel2.writeEnvelope(value); return; }
+        if (addr == 0xFF18) { apu.channel2.writeFrequencyLow(value); return; }
+        if (addr == 0xFF19) { apu.channel2.writeFrequencyHigh(value); return; }
+
+        if (addr == 0xFF24) { apu.writeNR50(value); return; }
+        if (addr == 0xFF25) { apu.writeNR51(value); return; }
+
         if (addr == 0xFF40) { ppu.lcdc = value; return; }
         if (addr == 0xFF42) { ppu.scy = value; return; }
         if (addr == 0xFF43) { ppu.scx = value; return; }
         if (addr == 0xFF46) {
             u16 sourceBase = static_cast<u16>(value << 8);
-            static int dmaCount = 0;
-            ++dmaCount;
-            if (dmaCount <= 5) {
-                std::printf("DMA #%d, first 8 bytes at 0x%04X: ", dmaCount, sourceBase);
-                for (int i = 0; i < 8; ++i) std::printf("%02X ", read8(static_cast<u16>(sourceBase + i)));
-                std::printf("\n");
-            }
-
-            // ppu.resetOAM();
             for (u16 i = 0; i < 0xA0; ++i) {
                 u8 byte = read8(static_cast<u16>(sourceBase + i));
                 ppu.writeOAM(static_cast<u16>(i), byte);

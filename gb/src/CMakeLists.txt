@@ -1,4 +1,5 @@
 add_library(gbemu_core
+    core/apu.cpp
     core/cartridge.cpp
     core/bus.cpp
     core/cpu.cpp
