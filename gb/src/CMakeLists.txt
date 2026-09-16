@@ -15,9 +15,11 @@ target_link_libraries(gbemu_core PUBLIC
 
 add_executable(emulator
     main.cpp
+    debug_ui.cpp
 )
 
 target_link_libraries(emulator PRIVATE
     gbemu_core
     SDL3::SDL3
+    imgui
 )

@@ -28,6 +28,9 @@ compile_commands.json
 # macOS
 .DS_Store
 
+# Dear ImGui — auto-saved debug-panel window layout, a runtime artifact like build/
+imgui.ini
+
 # ROMs — copyrighted (Tetris) and third-party test suites; never committed.
 # Keep the folder itself present (via roms/.gitkeep) so the default ROM path still exists.
 roms/**
