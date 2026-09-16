@@ -1,5 +1,7 @@
 #include "cpu.hpp"
 
+#include <print>
+
 namespace gb {
 
 u8 Cpu::fetch8() {
@@ -347,6 +349,7 @@ bool Cpu::handleInterrupts() {
         if (pending & (1 << bit)) {
             u8 currentIF = bus.read8(0xFF0F);
             bus.write8(0xFF0F, static_cast<u8>(currentIF & ~(1 << bit)));
+            imeFlag = false;
             push16(pc);
             pc = interruptVector[bit];
             return true;
@@ -493,20 +496,15 @@ int Cpu::step() {
         }
     }
     u8 opcode = fetch8();
-    // static int debugCount = 0;
-    // if (debugCount < 200) {
-    //     std::printf("PC=0x%04X OP=0x%02X SP=0x%04X\n",
-    //                 static_cast<unsigned>(pc - 1), opcode, sp);
-    //     ++debugCount;
-    // }
+    lastOpcode = opcode;
 
     if (opcode == 0x76) { // HALT
         halted = true;
-        // Note: real hardware has a documented "HALT bug" when imeFlag is false
+        // TODO: real hardware has a documented "HALT bug" when imeFlag is false
         // and an interrupt is already pending at this exact moment — not modeled here.
         return 4;
 
-        std::fprintf(stderr, "HALT not yet implemented at PC=0x%04X\n",
+        std::println(stderr, "HALT not yet implemented at PC=0x{:04X}",
                      static_cast<unsigned>(pc - 1));
         std::exit(1);
     }

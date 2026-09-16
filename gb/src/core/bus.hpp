@@ -3,6 +3,7 @@
 #include "cartridge.hpp"
 #include "joypad.hpp"
 #include "ppu.hpp"
+#include "scheduler.hpp"
 #include "timer.hpp"
 #include "types.hpp"
 #include <array>
@@ -11,28 +12,37 @@ namespace gb {
 
 class Bus {
 public:
-    explicit Bus(Cartridge& cart) : cartridge(cart) {}
+    Bus(Cartridge& cart, Scheduler& scheduler)
+        : scheduler(scheduler), cartridge(cart), ppu(scheduler), apu(scheduler), timer(scheduler) {}
 
-    u8 read8(u16 addr) const;
-    void write8(u16 addr, u8 value);
-    void tick(int cycles) {
-        timer.tick(cycles);
+    void start() {
+        timer.start();
+        ppu.start();
+        apu.start();
+    }
+    void collectInterrupts() {
         if (timer.interruptRequested) {
             interruptFlag |= 0x04;
             timer.interruptRequested = false;
         }
-        u8 prevLy = ppu.ly;
-        ppu.tick(cycles);
-        if (ppu.ly == 0 && prevLy != 0) {
-            interruptFlag |= 0x01; // bit 0 = VBlank
+        if (ppu.lycInterruptRequested) {
+            interruptFlag |= 0x02;
+            ppu.lycInterruptRequested = false;
         }
-        apu.tick(cycles);
+        if (ppu.vblankRequested) {
+            interruptFlag |= 0x01;
+            ppu.vblankRequested = false;
+        }
     }
-    const Ppu& getPpu() const { return ppu; }
+
+    u8 read8(u16 addr) const;
+    void write8(u16 addr, u8 value);
+    Ppu& getPpu() { return ppu; }
     Apu& getApu() { return apu; }
     Joypad& getJoypad() { return joypad; }
 
 private:
+    Scheduler& scheduler;
     u8 serialControl = 0;
     Joypad joypad;
     Cartridge& cartridge;

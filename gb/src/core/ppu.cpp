@@ -18,16 +18,6 @@ void Ppu::writeStat(u8 value) {
     statInterruptOnLycMatch = value & 0x40;
 }
 
-u8 Ppu::getMode() const {
-    if (ly >= kScreenHeight)
-        return 1; // VBlank
-    if (scanlineCycles < 80)
-        return 2; // OAM scan
-    if (scanlineCycles < 80 + 172)
-        return 3; // Drawing
-    return 0;     // HBlank
-}
-
 u8 Ppu::readStat() const {
     u8 lycMatchBit = (ly == lyc) ? 0x04 : 0x00;
     return static_cast<u8>(0x80 | statInterruptBitsAsByte() | lycMatchBit | getMode());
@@ -111,22 +101,17 @@ void Ppu::renderScanline() {
 void Ppu::advanceScanline() {
     renderScanline();
     ++ly;
-    if (ly >= 154)
+    if (ly == kScreenHeight) { // 144: last visible line done, entering VBlank
+        frameReady = true;
+        vblankRequested = true;
+        ++frameCount;
+    }
+    if (ly >= kScanlinesPerFrame) { // 154: full frame done, wrap to the next one
         ly = 0;
+    }
 
     if (ly == lyc && statInterruptOnLycMatch) {
         lycInterruptRequested = true;
-    }
-}
-
-void Ppu::tick(int cycles) {
-    if (!(lcdc & 0x80))
-        return;
-
-    scanlineCycles += cycles;
-    if (scanlineCycles >= kCyclesPerScanline) {
-        scanlineCycles -= kCyclesPerScanline;
-        advanceScanline();
     }
 }
 

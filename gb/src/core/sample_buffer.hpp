@@ -27,6 +27,12 @@ public:
         return s;
     }
 
+    size_t remaining() {
+        size_t r = readPos.load(std::memory_order_acquire); // what would happen with relaxed?
+        size_t w = writePos.load(std::memory_order_acquire);
+        return (w >= r) ? (w - r) : (buffer.size() - r + w);
+    }
+
 private:
     std::array<float, 16384> buffer{};
     std::atomic<size_t> writePos{0};

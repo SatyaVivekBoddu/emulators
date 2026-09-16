@@ -28,11 +28,11 @@ u8 Bus::read8(u16 addr) const {
         if (addr == 0xFF04)
             return timer.readDiv();
         if (addr == 0xFF05)
-            return timer.tima;
+            return timer.readTima();
         if (addr == 0xFF06)
-            return timer.tma;
+            return timer.readTma();
         if (addr == 0xFF07)
-            return timer.tac;
+            return timer.readTac();
         if (addr == 0xFF0F)
             return interruptFlag;
         if (addr == 0xFF40)
@@ -104,15 +104,15 @@ void Bus::write8(u16 addr, u8 value) {
             return;
         }
         if (addr == 0xFF05) {
-            timer.tima = value;
+            timer.writeTima(value);
             return;
         }
         if (addr == 0xFF06) {
-            timer.tma = value;
+            timer.writeTma(value);
             return;
         }
         if (addr == 0xFF07) {
-            timer.tac = value;
+            timer.writeTac(value);
             return;
         }
         if (addr == 0xFF0F) {
@@ -129,11 +129,11 @@ void Bus::write8(u16 addr, u8 value) {
             return;
         }
         if (addr == 0xFF13) {
-            apu.channel1.writeFrequencyLow(value);
+            apu.channel1.writeFrequencyLow(value, scheduler.now());
             return;
         }
         if (addr == 0xFF14) {
-            apu.channel1.writeFrequencyHigh(value);
+            apu.channel1.writeFrequencyHigh(value, scheduler.now());
             return;
         }
 
@@ -146,11 +146,11 @@ void Bus::write8(u16 addr, u8 value) {
             return;
         }
         if (addr == 0xFF18) {
-            apu.channel2.writeFrequencyLow(value);
+            apu.channel2.writeFrequencyLow(value, scheduler.now());
             return;
         }
         if (addr == 0xFF19) {
-            apu.channel2.writeFrequencyHigh(value);
+            apu.channel2.writeFrequencyHigh(value, scheduler.now());
             return;
         }
 

@@ -47,6 +47,10 @@ public:
     RegisterPair bc, de, hl;
     u16 pc = 0x0100; // Power on states
     u16 sp = 0xFFFE;
+    u8 lastOpcode = 0x00;
+
+    bool getIme() const { return imeFlag; }
+    bool isHalted() const { return halted; }
 
 private:
     Bus& bus;
