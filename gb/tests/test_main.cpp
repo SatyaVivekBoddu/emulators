@@ -25,8 +25,9 @@ std::filesystem::path writeTempRom(const std::vector<u8>& bytes) {
 // Owns a Cartridge/Bus/Cpu with matching lifetimes (Bus and Cpu hold references to
 // their predecessors) and places `opcodes` at 0x100, where the CPU starts executing.
 struct System {
+    Scheduler scheduler;
     Cartridge cart;
-    Bus bus{cart};
+    Bus bus{cart, scheduler};
     Cpu cpu{bus};
 
     explicit System(const std::vector<u8>& opcodes) {
@@ -1281,7 +1282,8 @@ TEST_CASE("Cpu executes CB RES and SET for all 8 bits and all 8 registers") {
 // --- Ppu ----------------------------------------------------------------
 
 TEST_CASE("Ppu renders a scanline through BGP: raw color index is remapped to a shade") {
-    Ppu ppu;
+    Scheduler scheduler;
+    Ppu ppu(scheduler);
     ppu.lcdc = 0x10; // unsigned tile addressing from 0x8000
     ppu.bgp = 0x1B;  // 00 01 10 11: color 1 remaps to shade 2
 
@@ -1289,10 +1291,39 @@ TEST_CASE("Ppu renders a scanline through BGP: raw color index is remapped to a 
     ppu.writeVRAM(0x8001, 0x00); // high byte: all clear -> raw color index 1 per pixel
     ppu.writeVRAM(0x9800, 0x00); // background map (0,0) -> tile 0
 
-    ppu.tick(456); // exactly one scanline
+    ppu.start();
+    scheduler.advanceTo(Ppu::kCyclesPerScanline); // exactly one scanline
 
     CHECK(ppu.ly == 1);
     for (int x = 0; x < 8; ++x) {
         CHECK(ppu.framebuffer[static_cast<size_t>(x)] == 2);
     }
+}
+
+TEST_CASE(
+    "Ppu completes a frame: frame-ready/VBlank fire once entering line 144, LY wraps at 154") {
+    Scheduler scheduler;
+    Ppu ppu(scheduler);
+    ppu.start();
+
+    // Through line 143: still drawing, nothing ready yet.
+    scheduler.advanceTo(143 * Ppu::kCyclesPerScanline);
+    CHECK(ppu.ly == 143);
+    CHECK(ppu.vblankRequested == false);
+    CHECK(ppu.consumeFrameReady() == false);
+
+    // Line 144 begins VBlank: the completed frame is ready, and stays ready until consumed.
+    scheduler.advanceTo(144 * Ppu::kCyclesPerScanline);
+    CHECK(ppu.ly == 144);
+    CHECK(ppu.vblankRequested == true);
+    CHECK(ppu.frameCount == 1);
+    CHECK(ppu.consumeFrameReady() == true);
+    CHECK(ppu.consumeFrameReady() == false); // consuming clears the flag
+
+    // LY keeps counting through the 10 VBlank lines, then wraps back to 0 — it must NOT
+    // reset early (regression: a missing pair of braces used to reset LY after every line).
+    scheduler.advanceTo(153 * Ppu::kCyclesPerScanline);
+    CHECK(ppu.ly == 153);
+    scheduler.advanceTo(Ppu::kScanlinesPerFrame * Ppu::kCyclesPerScanline);
+    CHECK(ppu.ly == 0);
 }
